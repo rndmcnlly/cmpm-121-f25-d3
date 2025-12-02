@@ -76,7 +76,7 @@ Basic CSS for the three main UI panels:
 
 ### `index.html` - HTML Entry ⚠️ MINIMIZE CHANGES
 
-Minimal HTML that loads `src/main.ts`. Students should express design through TypeScript, not HTML.
+Minimal HTML that loads `src/main.ts`. Dynamic UI elements should be created programmatically in TypeScript rather than statically added to this HTML file.
 
 ## Configuration Files
 
@@ -94,11 +94,12 @@ deno task fmt:check # Check formatting
 deno task ci       # Full CI pipeline (fmt + lint + check + build)
 ```
 
-**Dependencies:**
-- `leaflet` - Map library
-- `@types/leaflet` - TypeScript types for Leaflet
-- `murmur-32` - Hash function for deterministic randomness
-- `vite` - Build tool
+**Dependencies (from `imports` in deno.json):**
+- `leaflet` (^1.9.4) - Map library
+- `@types/leaflet` (^1.9.21) - TypeScript types for Leaflet
+- `murmur-32` (^1.0.0) - Hash function for deterministic randomness
+- `geojson` (^0.5.0) - GeoJSON utilities
+- `vite` (^7.1.12) - Build tool
 
 ### `vite.config.js` - Build Configuration
 
@@ -139,33 +140,25 @@ Bypass with `git commit --no-verify` (not recommended).
 
 ## Game Architecture
 
+**Module Dependency Tree:**
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      index.html                          │
-│                    (loads main.ts)                       │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────┐
-│                      main.ts                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │
-│  │ controlPanel│  │    map      │  │   statusPanel   │  │
-│  │   (div)     │  │  (Leaflet)  │  │     (div)       │  │
-│  └─────────────┘  └──────┬──────┘  └────────┬────────┘  │
-│                          │                   │           │
-│                   ┌──────┴──────┐           │           │
-│                   │ playerMarker│           │           │
-│                   │   caches    │◄──────────┘           │
-│                   │ (rectangles)│   (points display)    │
-│                   └─────────────┘                        │
-└─────────────────────────────────────────────────────────┘
-                      │
-         ┌────────────┼────────────┐
-         ▼            ▼            ▼
-   ┌──────────┐ ┌──────────┐ ┌──────────┐
-   │ _luck.ts │ │ style.css│ │_leaflet- │
-   │(random)  │ │ (styles) │ │Workaround│
-   └──────────┘ └──────────┘ └──────────┘
+index.html
+    └── src/main.ts (entry point)
+            ├── leaflet (map library)
+            ├── style.css (page styles)
+            ├── _leafletWorkaround.ts (marker icon fix)
+            └── _luck.ts (deterministic random)
+```
+
+**UI Component Structure:**
+```
+document.body
+    ├── #controlPanel (div) - Future game controls
+    ├── #map (div) - Leaflet map container
+    │       ├── Tile Layer (OpenStreetMap)
+    │       ├── Player Marker
+    │       └── Cache Rectangles (with popups)
+    └── #statusPanel (div) - Points display
 ```
 
 ## Data Flow
